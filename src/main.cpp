@@ -1,6 +1,10 @@
 #include <Arduino.h>
 #include <WiFi.h>
-#include <MQTT.h>
+#include <PubSubClient.h>
+
+// Setup PubSubClient 
+WiFiClient espClient;
+PubSubClient client(espClient);
 
 void setup()
 {
@@ -27,6 +31,23 @@ void setup()
 
   // Print the IP address
   Serial.println(WiFi.localIP());
+
+  // Connect to MQTT broker
+  client.setServer("automation.server.lan", 1883);
+  while (!client.connected())
+  {
+    Serial.println("Connecting to MQTT broker...");
+    if (client.connect("ESP32Client"))
+    {
+      Serial.println("connected");
+    }
+    else
+    {
+      Serial.print("failed with state ");
+      Serial.print(client.state());
+      delay(2000);
+    }
+  }
 }
 
 // Blink the LED on the NodeMCU 32S board
@@ -43,10 +64,12 @@ void loop()
     if (value == HIGH)
     {
       digitalWrite(LED_BUILTIN, HIGH);
+      client.publish("home/esp32/waterLevel", "HIGH");
     }
     else
     {
       digitalWrite(LED_BUILTIN, LOW);
+      client.publish("home/esp32/waterLevel", "LOW");
     }
 
     // Delay for a second
