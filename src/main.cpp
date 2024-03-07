@@ -32,22 +32,8 @@ void setup()
   // Print the IP address
   Serial.println(WiFi.localIP());
 
-  // Connect to MQTT broker
+  // Configure the MQTT server
   client.setServer("automation.server.lan", 1883);
-  while (!client.connected())
-  {
-    Serial.println("Connecting to MQTT broker...");
-    if (client.connect("ESP32Client"))
-    {
-      Serial.println("connected");
-    }
-    else
-    {
-      Serial.print("failed with state ");
-      Serial.print(client.state());
-      delay(2000);
-    }
-  }
 }
 
 // Blink the LED on the NodeMCU 32S board
@@ -55,6 +41,22 @@ void loop()
 {
   while (true)
   {
+    // Connect to MQTT broker
+    while (!client.connected())
+    {
+      Serial.println("Connecting to MQTT broker...");
+      if (client.connect("ESP32Client"))
+      {
+        Serial.println("connected");
+      }
+      else
+      {
+        Serial.print("failed with state ");
+        Serial.print(client.state());
+        delay(2000);
+      }
+    }
+    
     // Measure the voltage on GPIO23
     digitalWrite(22, HIGH);
     int value = digitalRead(23);
@@ -64,15 +66,17 @@ void loop()
     if (value == HIGH)
     {
       digitalWrite(LED_BUILTIN, HIGH);
-      client.publish("home/esp32/waterLevel", "HIGH");
+      client.publish("kitchen/waterLevel", "HIGH");
+      // Serial.print("-");
     }
     else
     {
       digitalWrite(LED_BUILTIN, LOW);
-      client.publish("home/esp32/waterLevel", "LOW");
+      client.publish("kitchen/waterLevel", "LOW");
+      // Serial.print(".");
     }
 
-    // Delay for a second
-    delay(100);
+    // Delay for ten seconds
+    delay(10000);
   }
 }
